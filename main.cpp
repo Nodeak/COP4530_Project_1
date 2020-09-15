@@ -6,67 +6,49 @@
 ****************************************************/
 
 #include <iostream>
-#include <fstream>
+#include <string>
+#include <vector>
 
 // Function Declaration
 int compute_nn_edges();         // Calculates Edges (weight? rank?)
 void compute_matching(void);    // Has to compute the array G2
 
 
-struct edge {
+struct Point {
     int x;
     int y;
+    int degree;
+
 };
 
+vector<Point> points;
+
+using namespace std;
 
 // Body of program
 int main(){
+    int num_points;
+    cin >> num_points;
 
-    std::fstream ifile("data.txt", std::ios_base::in);
-
-    int num_pts;
-    ifile << num_pts;
-
-    while(1){
-        
+    for (int i = 0; i < num_points; i++){
+        struct Point point;
+        string input;
+        cin >> input;
+        point.num = i + 1;
+        point.x = stoi(input.substr(0, input.find(',')));
+        point.y = stoi(input.substr(input.find(',') + 1));
     }
 
-    int G1_size = 10;
-
-    int G1 [10];
-
-    /* Things needed:
-
-    array G1 - stores edges? (returns of compute_nn_edges() is stored in this))
-             - G1[i] = j
-    array G2 - (computed by compute_matching(void)) such that (i, G2[i])
-             - This would be the finished product from what I understand
-
-    */
-
-
-
-
-    std::cout << "You can do it!\n";
     return 1;
 }
 
 
 // Function Descriptions
 int compute_nn_edges(){
+
     return 1;
 }
 
-
-/*
-    sl-vertex  - single and looking vertex
-               - have only one edge incident on it
-    sl-edge    - single and looking edge
-               - connects two sl-verices
-               - w_ij is the weight of the sl-edge
-
-
-*/
 void compute_matching(void){
 
 }
