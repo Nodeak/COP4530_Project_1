@@ -13,33 +13,21 @@
 using namespace std;
 
 // Function Declaration
-bool sortbysec(const pair<int,double> &a, const pair<int,double> &b);
+bool not_last(int * flags, int size);
+bool vec_sort(const pair<int,double> &a,const pair<int,double> &b);
 int * compute_nn_edges();         // Calculates Edges (weight? rank?)
-int * compute_matching(void);    // Has to compute the array G2
+void compute_matching(void);    // Has to compute the array G2
 
 
 struct Point {
     int x;
     int y;
-    bool free;
     int incidents;
-
-    // Constructors
-    Point(){
-        free = true;
-        incidents = 0;
-    }
-};
-
-struct sl_edge {
-    int p1;                                 // i point
-    int p2;                                 // j point
-    vector<pair<int, double> > pref_list;   // Pref list of <point, distance>
+    Point() : incidents(0) {};
 };
 
 int num_points;
 int * G1;                     // Holds nearnest neighbor edges
-int * G2;                     // Holds result of Gale-Shapely Algo
 vector<Point> points;   // Holds inputted points   // Holds inputted points
 
 
@@ -60,17 +48,8 @@ int main(){
     }
 
     G1 = compute_nn_edges();
+    compute_matching();
 
-    cout << "Nearest Neighbors" << endl;
-    for(int i = 0; i < points.size(); i++){
-        cout << G1[i] << endl;
-    }
-    cout << "Points & Incident Count" << endl;
-    for(int i = 0; i < points.size(); i++){
-        cout << points[i].x << "," << points[i].y << ": " << points[i].incidents << endl;
-    }
-
-    G2 = compute_matching();
     return 1;
 }
 
@@ -101,9 +80,9 @@ int * compute_nn_edges(){
     return nn_list;
 }
 
+
 // Modified Gale-Shapely Algorithm w/ preference matching
-int * compute_matching(void){
-    int * temp = new int[10];
+void compute_matching(void){
 
     // sl-vertices based on incident edge count
     vector<int> sl_vertices;
@@ -113,45 +92,63 @@ int * compute_matching(void){
         }
     }
 
-    cout << sl_vertices.size() << endl;
-
-    // List of Weights for each sl-vertex: <point, weight>
-    vector<sl_edge> weights(sl_vertices.size());
+    vector<vector<pair<int, double> > > p_list;
     for(int i = 0; i < sl_vertices.size(); i++){
-        sl_edge cur_edge;
-        cur_edge.p1 = sl_vertices[i];   // p1 = first sl_vertex
-        cur_edge.p2 = G1[i];            // p2 = p1's nearest neighbor
-        
+        int p1 = i;         // SL-vertex being looked at
+        int p2 = G1[i];     // Nearest Neighbor
+
+        vector<pair<int, double> > temp;
+
+        // Create preference list for p1
         for(int j = 0; j < sl_vertices.size(); j++){
-            int p3 = sl_vertices[j];
-            if(cur_edge.p1 != p3 && cur_edge.p2 != p3){
-                double calc_dist = sqrt(pow((points[cur_edge.p2].x - points[p3].x), 2) + pow((points[cur_edge.p2].y - points[p3].y), 2));
-                cur_edge.pref_list.push_back(make_pair(p3, calc_dist));
+            if(j != p1){
+                int p3 = sl_vertices[j];        // point p1 is attempting to connect to
+                double distance = sqrt(pow((points[p1].x - points[p3].x), 2) + pow((points[p1].y - points[p3].y), 2));
+                temp.push_back(make_pair(p3, distance));
             }
         }
-        weights.push_back(cur_edge);
+        sort(temp.begin(), temp.end(), vec_sort);
+        p_list.push_back(temp);
     }
 
-    cout << "Printing out sl_verticies and weights" << endl;
-    for(int i = 0; i < weights.size(); i++){
-        sortbysec(weights[i].pref_list.begin(), weights[i].pref_list.end());
-        for(int j = 0; j < weights[i].pref_list.size(); j++){
-            cout << "(" << weights[i].p1 << ", " << weights[i].p2 << "): " << weights[i].pref_list[j].first << " - " << weights[i].pref_list[j].second << endl;
+
+    // Set "visited" array to 0
+    int * flags = new int[p_list.size()];
+    for(int i =0; i < p_list.size(); i++){
+        flags[i] = 0;
+    }
+
+    // Prints out results.
+    int pt = 0;
+    cout << "0" << endl;                            // Begins at 0
+    while(not_last(flags, p_list.size())){
+        for(int i = 0; i < p_list[pt].size(); i++){
+            if(flags[p_list[pt][i].first] != 1){
+                flags[pt] = 1;                      // Raise visited flag on previous point
+                pt = p_list[pt][i].first;           // Closest distance becomes new focal point
+                break;
+            }
         }
+        cout << pt << endl;
     }
-
-    // Print sl-verticies
-    for(int i = 0; i < sl_vertices.size(); i++){
-        cout << sl_vertices[i] << endl;
-    }
-
-
-    return temp;
+    cout << "0" << endl;                            // Ends at 0
 }
 
 
-bool sortbysec(const pair<int,double> &a, 
-              const pair<int,double> &b) 
-{ 
-    return (a.second < b.second); 
-} 
+
+// Helper Functions
+bool not_last(int * flags, int size){
+    int n = 0;
+    for(int i = 0; i < size; i++){
+        if(flags[i] == 0)
+            n++;
+    }
+    if(n > 1)
+        return true;
+    return false;
+}
+
+bool vec_sort(const pair<int,double> &a, const pair<int,double> &b)
+{
+       return a.second<b.second;
+}
